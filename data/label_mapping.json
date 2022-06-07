@@ -1,11 +1,11 @@
 {
-  "1031001": "Razon_Consulta",
-  "40640321": "Derivacion_de/a",
-  "40362532": "Antecedentes_Familiares",
-  "4143884": "Antecedentes_Personales",
-  "45930399": "Exploracion_y/o_Pruebas_Complementarias",
-  "44803699": "Tratamiento",
-  "45955914": "Evolucion",
-  "4172950": "Diagnostico_Diferencial",
-  "4012837": "Diagnostico_Final"
+  "1031001": "RAZON_CONSULTA",
+  "40640321": "DERIVACION_DE/A",
+  "40362532": "ANTECEDENTES_FAMILIARES",
+  "4143884": "ANTECEDENTES_PERSONALES",
+  "45930399": "EXPLORACION",
+  "44803699": "TRATAMIENTO",
+  "45955914": "EVOLUCION",
+  "4172950": "DIAGNOSTICO_DIFERENCIAL",
+  "4012837": "DIAGNOSTICO_FINAL"
 }

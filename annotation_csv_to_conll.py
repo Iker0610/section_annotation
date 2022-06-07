@@ -5,7 +5,7 @@ from typing import TypedDict, cast
 import pandas as pd
 
 
-class EntryAnnotation(TypedDict):
+class Annotation(TypedDict):
     id: str
     entity: str
     start_position: int
@@ -15,17 +15,25 @@ class EntryAnnotation(TypedDict):
 
 class CsvDataEntry(TypedDict):
     note_id: int
-    task_result: str | list[EntryAnnotation]
+    task_result: str | list[Annotation]
     task_executor: str
     note_text: str
 
 
 class CleanedDataEntry(TypedDict):
     note_id: int
-    task_result: list[EntryAnnotation]
+    task_result: list[Annotation]
     task_executor: str
     note_text: str
 
+
+class Token(TypedDict):
+    token: str
+    start_offset: int
+    end_offset: int
+
+
+# ------------------------------------------------------------------------------------------------------------------
 
 def load_csv(csv_path: str) -> list[CleanedDataEntry]:
     data: list[CsvDataEntry] = pd.read_csv(csv_path).to_dict("records")
@@ -43,19 +51,55 @@ def load_csv(csv_path: str) -> list[CleanedDataEntry]:
     return cast(list[CleanedDataEntry], data)
 
 
-def get_annotation_tokens(annotation, tokens) -> list[tuple[str, int, int]]:
-    # TODO
-    pass
+def generate_token_list(text: str) -> list[Token]:
+    str_tokens = text.split()
+    tokens = list()
+
+    current_offset = 0
+
+    for str_token in str_tokens:
+        end_offset = current_offset + len(str_token)
+        tokens.append(
+            Token(
+                token=str_token,
+                start_offset=current_offset,
+                end_offset=end_offset
+            )
+        )
+        current_offset = end_offset + 1
+
+    return tokens
 
 
-def convert_to_conll(entry: CleanedDataEntry):
-    lines = [f"{entry['note_id']} {entry['task_executor']} 0"]
+def get_annotation_tokens(annotation: Annotation, tokens: list[Token], search_start_token: int = 0) -> tuple[int, list[Token]]:
+    token_index = search_start_token
+    annotated_tokens: list[Token] = list()
 
-    tokens = entry['note_text'].split()
+    for token_index, token_annotation in enumerate(tokens[search_start_token:], start=search_start_token):
+        if annotation['end_position'] <= token_annotation['start_offset']:
+            break
+        elif (token_annotation['start_offset'] <= annotation['start_position'] < token_annotation['end_offset']) or (annotation['start_position'] <= token_annotation['start_offset'] < annotation['end_position']):
+            annotated_tokens.append(token_annotation)
+
+    return token_index, annotated_tokens
+
+
+def convert_to_conll(entry: CleanedDataEntry) -> list[str]:
+    lines = [f"{entry['note_id']} {entry['task_executor']} O\n"]
+
+    tokens = generate_token_list(entry['note_text'])
+    current_token_index = 0
+
     for annotation in entry['task_result']:
-        annotated_tokens = get_annotation_tokens(annotation, tokens)
-        for token, start_offset, end_offset in annotated_tokens:
-            lines.append(f"{token} {start_offset}-{end_offset} {annotation['concept_category']}")
+        current_token_index, annotated_tokens = get_annotation_tokens(annotation, tokens, current_token_index)
+
+        if not annotated_tokens:
+            raise AssertionError()
+
+        for index, token in enumerate(annotated_tokens):
+            lines.append(f"{token['token']} {token['start_offset']}-{token['end_offset']} {'B' if index == 0 else 'I'}-{annotation['concept_category']}")
+
+    return lines
 
 
 def main(csv_path: str):
@@ -64,7 +108,8 @@ def main(csv_path: str):
     with open('./data/annotations_codiesp.json', 'w', encoding='utf8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-    files_conll = [convert_to_conll(entry) for entry in data]
+    with open("./data/annotations_codiesp.conll", "w", encoding="utf8") as conll_file:
+        conll_file.write("\n\n\n".join(["\n".join(convert_to_conll(entry)) for entry in data]))
 
 
 if __name__ == '__main__':
