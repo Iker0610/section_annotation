@@ -1,7 +1,7 @@
 import ast
 import json
 import re
-from string import punctuation
+from pprint import pprint
 from typing import TypedDict, cast, Callable
 
 import pandas as pd
@@ -133,34 +133,23 @@ def generate_token_list(text: str) -> list[Token]:
     return tokens
 
 
-def get_annotation_tokens(annotation: Annotation, tokens: list[Token], search_start_token: int = 0) -> tuple[int, list[Token]]:
-    token_index = search_start_token
-    annotated_tokens: list[Token] = list()
-
-    for token_index, token_annotation in enumerate(tokens[search_start_token:], start=search_start_token):
-        if annotation['end_position'] <= token_annotation['start_offset']:
-            break
-        elif (token_annotation['start_offset'] <= annotation['start_position'] < token_annotation['end_offset']) or (annotation['start_position'] <= token_annotation['start_offset'] < annotation['end_position']):
-            annotated_tokens.append(token_annotation)
-
-    return token_index, annotated_tokens
-
-
 def convert_to_conll(entry: CleanedDataEntry) -> list[str]:
     lines = [f"{entry['note_id']} {entry['task_executor']} O\n"]
 
     tokens = generate_token_list(entry['note_text'])
-    current_token_index = 0
 
-    for annotation in entry['task_result']:
-        current_token_index, annotated_tokens = get_annotation_tokens(annotation, tokens, current_token_index)
+    annotations: list[tuple[Annotation, Annotation | None]] = list(zip(entry['task_result'], entry['task_result'][1:] + [None]))
 
-        if not annotated_tokens:
-            raise AssertionError()
+    current_annotation, next_annotation = annotations.pop(0)
+    is_annotation_start = True
 
-        for index, token in enumerate(annotated_tokens):
-            lines.append(f"{token['token']} {token['start_offset']}-{token['end_offset']} {'B' if index == 0 else 'I'}-{annotation['concept_category']}")
+    for token in tokens:
+        if next_annotation is not None and next_annotation['start_position'] <= token['start_offset']:
+            current_annotation, next_annotation = annotations.pop(0)
+            is_annotation_start = True
 
+        lines.append(f"{token['token']} {token['start_offset']}-{token['end_offset']} {'B' if is_annotation_start else 'I'}-{current_annotation['concept_category']}")
+        is_annotation_start = False
     return lines
 
 
