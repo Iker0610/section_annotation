@@ -1,8 +1,21 @@
 import ast
 import json
-from typing import TypedDict, cast
+import re
+from string import punctuation
+from typing import TypedDict, cast, Callable
 
 import pandas as pd
+
+token_in_parenthesis_matcher = re.compile(r"^[(\[{].*[)\]}][.,:;]?$")
+
+start_delimiter_matcher = re.compile(r"^[(\[{¿¡]$")
+start_delimiter_splitter = re.compile(r"(?<=.)([(\[{¡¿])")
+
+end_delimiter_matcher = re.compile(r"^[)\]}?!][.,:;]?$")
+end_delimiter_splitter = re.compile(r"([)\]}?!][.,:;]?)(?=[^.,:;])")
+
+dot_splitter = re.compile(r"(?<!\.)(\.)(?=[A-ZÀ-ÖØ-ß])(?![A-ZÀ-ÖØ-ß]\.)|(?<=[a-zß-öø-ÿ])(\.)(?=[A-ZÀ-ÖØ-ß])")
+punctuation_splitter = re.compile(r"([,:;]).")
 
 
 class Annotation(TypedDict):
@@ -51,6 +64,61 @@ def load_csv(csv_path: str) -> list[CleanedDataEntry]:
     return cast(list[CleanedDataEntry], data)
 
 
+def fuse_subtokens(tokens: list[str], fuse_condition: Callable[[str, str], bool]) -> list[str]:
+    tokens = tokens.copy()
+
+    index = 0
+    while index < len(tokens) - 1:
+        previous_subtoken, subtoken = tokens[index], tokens[index + 1]
+
+        if fuse_condition(previous_subtoken, subtoken):
+            tokens[index:index + 2] = [previous_subtoken + subtoken]
+        else:
+            index += 1
+
+    return tokens
+
+
+def subtokenize(token: str, token_start_offset: int) -> list[Token]:
+    if token_in_parenthesis_matcher.match(token):
+        return [
+            Token(
+                token=token,
+                start_offset=token_start_offset,
+                end_offset=token_start_offset + len(token)
+            )
+        ]
+    else:
+        # Split token at end of parenthesis (keep punctuation marks stuck to parenthesis end)
+        subtokens = end_delimiter_splitter.split(token)
+        subtokens = fuse_subtokens(subtokens, lambda _, subtoken: bool(end_delimiter_matcher.match(subtoken)))
+
+        # Split token at start of parenthesis
+        subtokens = [split_subtoken for subtoken in subtokens for split_subtoken in start_delimiter_splitter.split(subtoken)]
+        subtokens = fuse_subtokens(subtokens, lambda subtoken, _: bool(start_delimiter_matcher.match(subtoken)))
+
+        # Split by punctuation mark but dot
+        subtokens = [split_subtoken for subtoken in subtokens for split_subtoken in punctuation_splitter.split(subtoken)]
+        subtokens = fuse_subtokens(subtokens, lambda _, subtoken: bool(subtoken in ',:;'))
+
+        # Split by dot
+        subtokens = [split_subtoken for subtoken in subtokens for split_subtoken in dot_splitter.split(subtoken) if split_subtoken]
+        subtokens = fuse_subtokens(subtokens, lambda _, subtoken: bool(subtoken == '.'))
+
+        # Convert strings to Token instances
+        current_offset: int = token_start_offset
+        for index, subtoken in enumerate(subtokens):
+            end_offset = current_offset + len(subtoken)
+            subtokens[index] = Token(
+                token=subtoken,
+                start_offset=current_offset,
+                end_offset=end_offset
+            )
+            current_offset = end_offset
+
+        return cast(list[Token], subtokens)
+
+
 def generate_token_list(text: str) -> list[Token]:
     str_tokens = text.split()
     tokens = list()
@@ -59,13 +127,7 @@ def generate_token_list(text: str) -> list[Token]:
 
     for str_token in str_tokens:
         end_offset = current_offset + len(str_token)
-        tokens.append(
-            Token(
-                token=str_token,
-                start_offset=current_offset,
-                end_offset=end_offset
-            )
-        )
+        tokens += subtokenize(str_token, current_offset)
         current_offset = end_offset + 1
 
     return tokens
