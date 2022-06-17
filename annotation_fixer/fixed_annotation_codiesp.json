@@ -1,0 +1,45 @@
+[
+  {
+    "note_id": 9223233032138632789,
+    "task_result": [
+      {
+        "id": "new-lo9ca8vsf",
+        "entity": "Niño de 3 meses con lesiones eritematosas, redondeadas, de bordes definidos, con centro más pálido en el rostro, los miembros superiores, de aspecto reticulado en miembros inferiores y dorso de 1 mes de evolución. Hepatoesplenomegalia.\n \n ",
+        "end_position": 239,
+        "start_position": 0,
+        "concept_category": "RAZON_CONSULTA"
+      },
+      {
+        "id": "new-m8igjh1hb",
+        "entity": "Madre y abuela materna con diagnóstico de Lupus Eritematoso sistémico (LES)\n ",
+        "end_position": 316,
+        "start_position": 239,
+        "concept_category": "ANTECEDENTES_FAMILIARES"
+      },
+      {
+        "id": "new-zkoy6gx6y",
+        "entity": "Exámenes complementarios: Hb 10g/dl, Hto 30%, GPT 78 UI/L, C3 53 mg/dl y C4 3mg/dl, FAN+ 1/100, acs. anti Ro, anti La, anti Sm y anti U1RNP negativos.\n Estudio histopatológico: hiperqueratosis, atrofia epidérmica, vacuolización de queratinocitos basales e infiltrado difuso mononuclear en dermis superficial. Inmunofluorescencia directa (IFD): banda segmentaria dermoepidérmica de disposición granular fina IgG+ y C3+.\n Valoración cardiológica normal.\n ",
+        "end_position": 769,
+        "start_position": 316,
+        "concept_category": "EXPLORACION"
+      },
+      {
+        "id": "new-sgxkaylis",
+        "entity": "Tratamiento: hidrocortisona 1% crema.\n ",
+        "end_position": 808,
+        "start_position": 769,
+        "concept_category": "TRATAMIENTO"
+      },
+      {
+        "id": "new-lkigdyw2t",
+        "entity": "Resolución de las lesiones cutáneas, negativización del FAN y normalización del hepatograma a los 6 meses de vida.\n",
+        "end_position": 923,
+        "start_position": 808,
+        "concept_category": "EVOLUCION"
+      }
+    ],
+    "task_executor": "u1755",
+    "note_text_corrupted": "Niño de 3 meses con lesiones eritematosas redondeadas de bordes definidos con centro más pálido en el rostro los miembros superiores de aspecto reticulado en miembros inferiores y dorso de 1 mes de evolución. Hepatoesplenomegalia.Madre y abuela materna con diagnóstico de Lupus Eritematoso sistémico (LES)Exámenes complementarios: Hb 10g/dl Hto 30% GPT 78 UI/L C3 53 mg/dl y C4 3mg/dl FAN+ 1/100 acs. anti Ro anti La anti Sm y anti U1RNP negativos.Estudio histopatológico: hiperqueratosis atrofia epidérmica vacuolización de queratinocitos basales e infiltrado difuso mononuclear en dermis superficial. Inmunofluorescencia directa (IFD): banda segmentaria dermoepidérmica de disposición granular fina IgG+ y C3+.Valoración cardiológica normal.Tratamiento: hidrocortisona 1% crema.Resolución de las lesiones cutáneas negativización del FAN y normalización del hepatograma a los 6 meses de vida.",
+    "note_text_golden": "Niño de 3 meses con lesiones eritematosas, redondeadas, de bordes definidos, con centro más pálido en el rostro, los miembros superiores, de aspecto reticulado en miembros inferiores y dorso de 1 mes de evolución. Hepatoesplenomegalia.\n \n Madre y abuela materna con diagnóstico de Lupus Eritematoso sistémico (LES)\n Exámenes complementarios: Hb 10g/dl, Hto 30%, GPT 78 UI/L, C3 53 mg/dl y C4 3mg/dl, FAN+ 1/100, acs. anti Ro, anti La, anti Sm y anti U1RNP negativos.\n Estudio histopatológico: hiperqueratosis, atrofia epidérmica, vacuolización de queratinocitos basales e infiltrado difuso mononuclear en dermis superficial. Inmunofluorescencia directa (IFD): banda segmentaria dermoepidérmica de disposición granular fina IgG+ y C3+.\n Valoración cardiológica normal.\n Tratamiento: hidrocortisona 1% crema.\n Resolución de las lesiones cutáneas, negativización del FAN y normalización del hepatograma a los 6 meses de vida.\n"
+  }
+]
