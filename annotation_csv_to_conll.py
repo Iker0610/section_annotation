@@ -50,7 +50,7 @@ class Token(TypedDict):
 
 def load_csv(csv_path: str) -> list[CleanedDataEntry]:
     data: list[CsvDataEntry] = pd.read_csv(csv_path).to_dict("records")
-    with open("./data/label_mapping.json", encoding='utf8') as label_mapping_file:
+    with open("./mappers/label_mapping.json", encoding='utf8') as label_mapping_file:
         label_mapping: dict[str, str] = json.load(label_mapping_file)
 
     for data_entry in data:
@@ -156,7 +156,7 @@ def convert_to_conll(entry: CleanedDataEntry) -> list[str]:
 def main(csv_path: str):
     data = load_csv(csv_path)
 
-    with open('./data/annotations_codiesp.json', 'w', encoding='utf8') as f:
+    with open('data/annotations_codiesp_corrupted.json', 'w', encoding='utf8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
     with open("./data/annotations_codiesp.conll", "w", encoding="utf8") as conll_file:
