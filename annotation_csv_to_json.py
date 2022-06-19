@@ -55,6 +55,9 @@ class CorruptedNoteData(TypedDict):
     original_note: str
 
 
+GroupedAnnotatedDataset = dict[str, dict[str, FixedDataEntry]]
+
+
 # ------------------------------------------------------------------------------------------------------------------
 
 def load_data_csv(csv_path: str) -> list[CorruptedDataEntry]:
@@ -150,13 +153,23 @@ def fix_corrupted_dataset(dataset: list[CorruptedDataEntry]) -> list[FixedDataEn
 
 # ------------------------------------------------------------------------------------------------------------------
 
+def group_dataset_annotations_by_file(dataset: list[FixedDataEntry]) -> GroupedAnnotatedDataset:
+    grouped_dataset: GroupedAnnotatedDataset = dict()
+    for annotated_text in dataset:
+        grouped_dataset.setdefault(annotated_text['filename'], dict())[annotated_text['annotator']] = annotated_text
+    return dict(sorted(grouped_dataset.items()))
+
+
+# ------------------------------------------------------------------------------------------------------------------
+
 
 def main(csv_path: str):
     raw_data = load_data_csv(csv_path)
     fixed_data = fix_corrupted_dataset(raw_data)
+    grouped_data = group_dataset_annotations_by_file(fixed_data)
 
     with open('data/annotations_codiesp.json', 'w', encoding='utf8') as f:
-        json.dump(fixed_data, f, ensure_ascii=False, indent=2)
+        json.dump(grouped_data, f, ensure_ascii=False, indent=2)
 
 
 if __name__ == '__main__':
