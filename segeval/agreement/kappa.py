@@ -56,7 +56,7 @@ def __fleiss_kappa_linear__(dataset, **kwargs):
         return kappa
 
 
-def fleiss_kappa_linear(dataset, **kwargs):
+def fleiss_kappa_linear(dataset, **kwargs) -> Decimal:
     """
     Calculates Fleiss' :math:`\kappa` (or multi-:math:`\kappa`), originally proposed in
     [DaviesFleiss1982]_.  For 2 coders, this is equivalent to Cohen's :math:`\kappa`
