@@ -25,7 +25,7 @@ class Annotation(TypedDict):
     entity: str
     start_position: int
     end_position: int
-    concept_category: str
+    label: str
 
 
 class CsvDataEntry(TypedDict):
@@ -55,7 +55,19 @@ class CorruptedNoteData(TypedDict):
     original_note: str
 
 
-GroupedAnnotatedDataset = dict[str, dict[str, FixedDataEntry]]
+class NoteAnnotations(TypedDict):
+    annotator: str
+    annotations: list[Annotation]
+
+
+class NoteWithAnnotations(TypedDict):
+    note_id: int
+    filename: str
+    note_text: str
+    annotator_annotations: dict[str, NoteAnnotations]
+
+
+GroupedAnnotatedDataset = dict[str, NoteWithAnnotations]
 
 
 # ------------------------------------------------------------------------------------------------------------------
@@ -71,7 +83,8 @@ def load_data_csv(csv_path: str) -> list[CorruptedDataEntry]:
         data_entry['task_result'].sort(key=lambda e: e['start_position'])
 
         for entity_annotation in data_entry['task_result']:
-            entity_annotation['concept_category'] = label_mapping[str(entity_annotation['concept_category'])]
+            entity_annotation['label'] = label_mapping[str(entity_annotation['concept_category'])]
+            del entity_annotation['concept_category']
 
     return cast(list[CorruptedDataEntry], data)
 
@@ -156,7 +169,16 @@ def fix_corrupted_dataset(dataset: list[CorruptedDataEntry]) -> list[FixedDataEn
 def group_dataset_annotations_by_file(dataset: list[FixedDataEntry]) -> GroupedAnnotatedDataset:
     grouped_dataset: GroupedAnnotatedDataset = dict()
     for annotated_text in dataset:
-        grouped_dataset.setdefault(annotated_text['filename'], dict())[annotated_text['annotator']] = annotated_text
+        grouped_dataset.setdefault(
+            annotated_text['filename'],
+            NoteWithAnnotations(
+                note_id=annotated_text['note_id'],
+                filename=annotated_text['filename'],
+                note_text=annotated_text['note_text'],
+                annotator_annotations=dict(),
+            )
+        )['annotator_annotations'][annotated_text['annotator']] = NoteAnnotations(annotator=annotated_text['annotator'], annotations=annotated_text['annotations'])
+
     return dict(sorted(grouped_dataset.items()))
 
 
@@ -165,6 +187,7 @@ def group_dataset_annotations_by_file(dataset: list[FixedDataEntry]) -> GroupedA
 
 def main(csv_path: str):
     raw_data = load_data_csv(csv_path)
+
     fixed_data = fix_corrupted_dataset(raw_data)
     grouped_data = group_dataset_annotations_by_file(fixed_data)
 
