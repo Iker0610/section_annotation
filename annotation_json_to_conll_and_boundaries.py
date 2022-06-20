@@ -201,7 +201,7 @@ def generate_conll(filename: str, annotator: str, tokenized_text, boundaries: Bo
 
 def main(json_path: str, conll_output_path: str, boundary_dataset_path: str):
     with open(json_path, encoding='utf8') as json_file:
-        dataset: GroupedAnnotatedDataset = json.load(json_file)
+        dataset: GroupedAnnotatedDataset = json.load(json_file)['annotated_dataset']
 
     boundary_dataset = BoundaryDataset(
         segmentation_type='linear',
@@ -220,7 +220,8 @@ def main(json_path: str, conll_output_path: str, boundary_dataset_path: str):
                 for annotator, annotations in annotated_file_data['annotator_annotations'].items()
             }
 
-            boundary_dataset['items'][filename] = boundaries_per_annotator
+            if 1 < len(boundaries_per_annotator):
+                boundary_dataset['items'][filename] = boundaries_per_annotator
 
             for annotator, boundaries in boundaries_per_annotator.items():
                 generate_conll(filename, annotator, tokenized_note_text, boundaries, conll_file)

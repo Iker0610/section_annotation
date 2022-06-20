@@ -64,10 +64,23 @@ class NoteWithAnnotations(TypedDict):
     note_id: int
     filename: str
     note_text: str
+    metrics: list
     annotator_annotations: dict[str, NoteAnnotations]
 
 
 GroupedAnnotatedDataset = dict[str, NoteWithAnnotations]
+
+
+class DatasetMetrics(TypedDict):
+    Agreement: float
+    BIAS: float
+    KAPPA: float
+    PI: float
+
+
+class DatasetWithMetrics(TypedDict):
+    dataset_metrics: dict[str, DatasetMetrics]
+    annotated_dataset: GroupedAnnotatedDataset
 
 
 # ------------------------------------------------------------------------------------------------------------------
@@ -166,7 +179,7 @@ def fix_corrupted_dataset(dataset: list[CorruptedDataEntry]) -> list[FixedDataEn
 
 # ------------------------------------------------------------------------------------------------------------------
 
-def group_dataset_annotations_by_file(dataset: list[FixedDataEntry]) -> GroupedAnnotatedDataset:
+def group_dataset_annotations_by_file(dataset: list[FixedDataEntry]) -> DatasetWithMetrics:
     grouped_dataset: GroupedAnnotatedDataset = dict()
     for annotated_text in dataset:
         grouped_dataset.setdefault(
@@ -176,10 +189,14 @@ def group_dataset_annotations_by_file(dataset: list[FixedDataEntry]) -> GroupedA
                 filename=annotated_text['filename'],
                 note_text=annotated_text['note_text'],
                 annotator_annotations=dict(),
+                metrics=list()
             )
         )['annotator_annotations'][annotated_text['annotator']] = NoteAnnotations(annotator=annotated_text['annotator'], annotations=annotated_text['annotations'])
 
-    return dict(sorted(grouped_dataset.items()))
+    return DatasetWithMetrics(
+        dataset_metrics=dict(),
+        annotated_dataset=dict(sorted(grouped_dataset.items()))
+    )
 
 
 # ------------------------------------------------------------------------------------------------------------------
