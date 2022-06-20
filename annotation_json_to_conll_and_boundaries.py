@@ -55,6 +55,28 @@ GroupedAnnotatedDataset = dict[str, NoteWithAnnotations]
 Boundaries = list[list[str]]
 
 
+class BoundaryDataset(TypedDict):
+    segmentation_type: str
+    boundary_format: str
+    boundary_types: list[str]
+    items: dict[str, dict[str, Boundaries]]
+
+
+# ------------------------------------------------------------------------------------------------------------------
+
+label_list = [
+    "RAZON_CONSULTA",
+    "DERIVACION_DE/A",
+    "ANTECEDENTES_FAMILIARES",
+    "ANTECEDENTES_PERSONALES",
+    "EXPLORACION",
+    "TRATAMIENTO",
+    "EVOLUCION",
+    "DIAGNOSTICO_DIFERENCIAL",
+    "DIAGNOSTICO_FINAL"
+]
+
+
 # ------------------------------------------------------------------------------------------------------------------
 
 def save_popleft(queue: deque):
@@ -132,7 +154,7 @@ def generate_token_list(text: str) -> list[Token]:
 
         if str_token and str_token not in ['\r\n', '\n', '\r', ' ']:
             tokens += subtokenize(str_token, current_offset)
-        elif str_token in  ['\r\n', '\n', '\r']:
+        elif str_token in ['\r\n', '\n', '\r']:
             tokens.append(Token(
                 token='<#EOL#>',
                 start_offset=current_offset,
@@ -177,26 +199,39 @@ def generate_conll(filename: str, annotator: str, tokenized_text, boundaries: Bo
 
 # ------------------------------------------------------------------------------------------------------------------
 
-def main(json_path: str, conll_output_path: str):
+def main(json_path: str, conll_output_path: str, boundary_dataset_path: str):
     with open(json_path, encoding='utf8') as json_file:
         dataset: GroupedAnnotatedDataset = json.load(json_file)
+
+    boundary_dataset = BoundaryDataset(
+        segmentation_type='linear',
+        boundary_format='sets',
+        boundary_types=label_list,
+        items=dict()
+    )
 
     with open(conll_output_path, "w", encoding="utf8") as conll_file:
         for filename, annotated_file_data in dataset.items():
             note_text: str = annotated_file_data['note_text']
             tokenized_note_text: list[Token] = generate_token_list(note_text)
 
-            annotation_boundaries_per_annotator: dict[str: Boundaries] = {
+            boundaries_per_annotator: dict[str: Boundaries] = {
                 annotator: get_annotation_boundaries(tokenized_note_text, annotations['annotations'])
                 for annotator, annotations in annotated_file_data['annotator_annotations'].items()
             }
 
-            for annotator, boundaries in annotation_boundaries_per_annotator.items():
+            boundary_dataset['items'][filename] = boundaries_per_annotator
+
+            for annotator, boundaries in boundaries_per_annotator.items():
                 generate_conll(filename, annotator, tokenized_note_text, boundaries, conll_file)
+
+    with open(boundary_dataset_path, "w", encoding="utf8") as boundary_dataset_file:
+        json.dump(boundary_dataset, boundary_dataset_file, ensure_ascii=False, indent=2)
 
 
 if __name__ == '__main__':
     main(
         json_path='./data/annotations_codiesp.json',
-        conll_output_path='./data/annotations_codiesp.conll'
+        conll_output_path='./data/annotations_codiesp.conll',
+        boundary_dataset_path='./data/annotations_codiesp_boundaries_dataset.json'
     )
