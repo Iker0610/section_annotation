@@ -10,7 +10,6 @@ from segeval.data import Dataset
 from segeval.data.jsonutils import input_linear_boundaries_json
 from segeval.similarity import weight_a, boundary_statistics
 from segeval.similarity.boundary import boundary_similarity
-from segeval.similarity.segmentation import segmentation_similarity
 from segeval.similarity.weight import weight_s, weight_t
 
 
@@ -52,40 +51,45 @@ class DatasetWithMetrics(TypedDict):
 
 # ------------------------------------------------------------------------------------------------------------------
 
-def calculate_dataset_intertagger_metrics(dataset, metric_function, weight_functions):
+def calculate_dataset_intertagger_metrics(metric_function, **kwargs):
     return DatasetMetrics(
-        KAPPA=float(fleiss_kappa_linear(dataset=dataset, fnc_compare=metric_function, weight=weight_functions)),
-        PI=float(fleiss_pi_linear(dataset=dataset, fnc_compare=metric_function, weight=weight_functions)),
-        Agreement=float(actual_agreement_linear(dataset=dataset, fnc_compare=metric_function, weight=weight_functions)),
-        BIAS=float(artstein_poesio_bias_linear(dataset=dataset, fnc_compare=metric_function, weight=weight_functions)),
+        KAPPA=float(fleiss_kappa_linear(fnc_compare=metric_function, **kwargs)),
+        PI=float(fleiss_pi_linear(fnc_compare=metric_function, **kwargs)),
+        Agreement=float(actual_agreement_linear(fnc_compare=metric_function, **kwargs)),
+        BIAS=float(artstein_poesio_bias_linear(fnc_compare=metric_function, **kwargs)),
     )
 
 
 def calculate_metrics(dataset: Dataset):
     weight_functions = (weight_a, weight_s, weight_t)
+    weight_functions2 = (
+        lambda *args, **kwargs: 0.6 * weight_a(*args, **kwargs),
+        lambda *args, **kwargs: 1.5 * weight_s(*args, **kwargs),
+        lambda *args, **kwargs: 0.3 * weight_t(*args, **kwargs)
+    )
+    parameters_B = {
+        'dataset': dataset,
+        'weight': weight_functions,
+    }
+
+    parameters_B2 = {
+        'dataset': dataset,
+        'weight': weight_functions2,
+        'n_t': 50
+    }
 
     metrics: dict[str, dict] = {
         'intertagger_metrics': {
-            'B': calculate_dataset_intertagger_metrics(dataset=dataset, metric_function=boundary_similarity, weight_functions=weight_functions),
-            'S': calculate_dataset_intertagger_metrics(dataset=dataset, metric_function=segmentation_similarity, weight_functions=weight_functions),
+            'B': calculate_dataset_intertagger_metrics(metric_function=boundary_similarity, **parameters_B),
+            'S': calculate_dataset_intertagger_metrics(metric_function=boundary_similarity, **parameters_B2),
         },
         'file_stats': defaultdict(list),
     }
 
-    stats_per_file: dict = boundary_statistics(
-        dataset=dataset,
-        weight=weight_functions,
-    )
+    stats_per_file: dict = boundary_statistics(**parameters_B2)
 
-    s = segmentation_similarity(
-        dataset=dataset,
-        weight=weight_functions,
-    )
-
-    b = boundary_similarity(
-        dataset=dataset,
-        weight=weight_functions,
-    )
+    b = boundary_similarity(**parameters_B)
+    b2 = boundary_similarity(**parameters_B2)
 
     for file_code, file_stats in stats_per_file.items():
         filename, *annotators = file_code.split(',')
@@ -99,7 +103,7 @@ def calculate_metrics(dataset: Dataset):
             'annotators': annotators,
             'stats': file_stats,
             'metrics': {
-                'S': s[file_code],
+                'S': b2[file_code],
                 'B': b[file_code]
             }
         })
