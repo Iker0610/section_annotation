@@ -1,5 +1,7 @@
 import json
+import math
 from collections import defaultdict
+from decimal import Decimal
 from typing import TypedDict
 
 from segeval.agreement import actual_agreement_linear
@@ -10,7 +12,7 @@ from segeval.data import Dataset
 from segeval.data.jsonutils import input_linear_boundaries_json
 from segeval.similarity import weight_a, boundary_statistics
 from segeval.similarity.boundary import boundary_similarity
-from segeval.similarity.weight import weight_s, weight_t
+from segeval.similarity.weight import weight_s, weight_t, weight_t_scale
 
 
 class Annotation(TypedDict):
@@ -60,12 +62,57 @@ def calculate_dataset_intertagger_metrics(metric_function, **kwargs):
     )
 
 
+def weighted_A(additions, *args, **kwargs):
+    additions = len(additions)
+
+    if additions < 3:
+        return 0.55 * additions
+    else:
+        return additions
+
+
+def weighted_A2(additions, *args, **kwargs):
+    additions = len(additions)
+
+    if additions:
+        # return 1 + ((math.log2((additions / 3) + 0.125)) / 1.85 * additions)
+        # return additions * (math.log10(additions) / 1.25 + 0.25)
+        return additions * ((math.log(additions - 0.9, 50) / 2) + 0.8)
+    else:
+        return 0
+
+
+def weighted_A3(additions, *args, **kwargs):
+    additions = len(additions)
+
+    def weight(x):
+        return 0.75 + (math.tanh((x - 1.5) - 2) / 4)
+
+    return additions * weight(additions) if additions else 0
+
+
+def weight_t_scale2(transpositions, max_n):
+    """
+    Default weighting function for transposition edit operations by the distance that transpositions span.
+    """
+
+    def weight(x):
+        return 0.35 + (math.tanh(x / 10) / 3)
+
+    numerator = 0
+    for transposition in transpositions:
+        num_tokens_moved = abs(transposition[0] - transposition[1])
+        numerator += 0 if num_tokens_moved <= 2 else weight(num_tokens_moved - 15)
+    return numerator
+
+
 def calculate_metrics(dataset: Dataset):
     weight_functions = (weight_a, weight_s, weight_t)
     weight_functions2 = (
-        lambda *args, **kwargs: 0.6 * weight_a(*args, **kwargs),
+        weighted_A3,
         lambda *args, **kwargs: 1.5 * weight_s(*args, **kwargs),
-        lambda *args, **kwargs: 0.3 * weight_t(*args, **kwargs)
+        # lambda *args, **kwargs: float(weight_t_scale(*args, **kwargs))
+        weight_t_scale2
     )
     parameters_B = {
         'dataset': dataset,
@@ -75,7 +122,7 @@ def calculate_metrics(dataset: Dataset):
     parameters_B2 = {
         'dataset': dataset,
         'weight': weight_functions2,
-        'n_t': 50
+        'n_t': 40
     }
 
     metrics: dict[str, dict] = {
