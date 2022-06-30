@@ -23,7 +23,7 @@ def __boundary_similarity__(*args, **kwargs):
     transpositions = statistics['transpositions']
     count_unweighted = len(additions) + len(substitutions) + len(transpositions)
     # Fraction
-    denominator = count_unweighted + len(statistics['matches']) + statistics['weighted_transpositions']
+    denominator = count_unweighted + len(statistics['matches']) + (1 - statistics['weighted_transpositions'])
     numerator = denominator - statistics['count_edits']
     if numerator < 0: numerator = 0
 

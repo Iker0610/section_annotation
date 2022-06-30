@@ -110,7 +110,7 @@ def calculate_metrics(dataset: Dataset):
     weight_functions = (weight_a, weight_s, weight_t)
     weight_functions2 = (
         weighted_A3,
-        lambda *args, **kwargs: 1.5 * weight_s(*args, **kwargs),
+        lambda *args, **kwargs: 1.3 * weight_s(*args, **kwargs),
         # lambda *args, **kwargs: float(weight_t_scale(*args, **kwargs))
         weight_t_scale2
     )
