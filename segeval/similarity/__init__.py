@@ -75,7 +75,7 @@ def __boundary_statistics__(segs_a, segs_b, boundary_types, boundary_format, n_t
     return {'count_edits': count_edits, 'additions': additions,
             'substitutions': substitutions, 'transpositions': transpositions,
             'full_misses': full_misses, 'boundaries_all': boundaries_all,
-            'matches': matches, 'pbs': pbs, 'boundary_types': boundary_types}
+            'matches': matches, 'pbs': pbs, 'boundary_types': boundary_types, "weighted_transpositions": count_transpositions}
 
 
 def __boundary_confusion_matrix__(*args, **kwargs):

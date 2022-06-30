@@ -10,7 +10,6 @@ from decimal import Decimal
 
 
 def __boundary_similarity__(*args, **kwargs):
-
     metric_kwargs = dict(kwargs)
     del metric_kwargs['return_parts']
     del metric_kwargs['one_minus']
@@ -24,10 +23,12 @@ def __boundary_similarity__(*args, **kwargs):
     transpositions = statistics['transpositions']
     count_unweighted = len(additions) + len(substitutions) + len(transpositions)
     # Fraction
-    denominator = count_unweighted + len(statistics['matches'])
+    denominator = count_unweighted + len(statistics['matches']) + statistics['weighted_transpositions']
     numerator = denominator - statistics['count_edits']
+    if numerator < 0: numerator = 0
+
     if return_parts:
-        return numerator, denominator, additions, substitutions, transpositions
+        return numerator, int(denominator), additions, substitutions, transpositions
     else:
         value = numerator / denominator if denominator > 0 else 1
         if one_minus:
