@@ -105,6 +105,25 @@ def load_data_csv(csv_path: str) -> list[CorruptedDataEntry]:
 # ------------------------------------------------------------------------------------------------------------------
 
 
+def fuse_contiguous_sections(annotations: list[Annotation], note: str) -> list[Annotation]:
+    annotations = annotations.copy()
+
+    current_index = 0
+    while current_index < len(annotations) - 1:
+        current_annotation = annotations[current_index]
+        next_annotation = annotations[current_index + 1]
+
+        if current_annotation['label'] == next_annotation['label']:
+            current_annotation['end_position'] = next_annotation['end_position']
+            current_annotation['entity'] = note[current_annotation['start_position']:current_annotation['end_position']]
+            del annotations[current_index + 1]
+
+        else:
+            current_index += 1
+
+    return annotations
+
+
 def fix_corrupted_annotation(corrupted_data_entry: CorruptedDataEntry, corrupted_corpus_mapper: dict) -> FixedDataEntry:
     annotated_note_data: CorruptedNoteData = corrupted_corpus_mapper[corrupted_data_entry['note_text']]
     original_note, filename = annotated_note_data['original_note'], annotated_note_data['filename']
@@ -119,7 +138,7 @@ def fix_corrupted_annotation(corrupted_data_entry: CorruptedDataEntry, corrupted
         return FixedDataEntry(
             note_id=corrupted_data_entry['note_id'],
             filename=filename,
-            annotations=corrupted_data_entry['task_result'],
+            annotations=fuse_contiguous_sections(corrupted_data_entry['task_result'], original_note),
             annotator=corrupted_data_entry['task_executor'],
             note_text=original_note,
         )
@@ -164,7 +183,7 @@ def fix_corrupted_annotation(corrupted_data_entry: CorruptedDataEntry, corrupted
     return FixedDataEntry(
         note_id=corrupted_data_entry['note_id'],
         filename=filename,
-        annotations=corrupted_data_entry['task_result'],
+        annotations=fuse_contiguous_sections(corrupted_data_entry['task_result'], original_note),
         annotator=corrupted_data_entry['task_executor'],
         note_text=original_note,
     )
