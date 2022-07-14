@@ -1,7 +1,6 @@
 import json
 import math
 from collections import defaultdict
-from decimal import Decimal
 from typing import TypedDict
 
 from segeval.agreement import actual_agreement_linear
@@ -12,7 +11,7 @@ from segeval.data import Dataset
 from segeval.data.jsonutils import input_linear_boundaries_json
 from segeval.similarity import weight_a, boundary_statistics
 from segeval.similarity.boundary import boundary_similarity
-from segeval.similarity.weight import weight_s, weight_t, weight_t_scale
+from segeval.similarity.weight import weight_s, weight_t
 
 
 class Annotation(TypedDict):

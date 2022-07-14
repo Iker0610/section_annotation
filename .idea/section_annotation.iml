@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
-    <content url="file://$MODULE_DIR$" />
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/data/conll" />
+      <excludeFolder url="file://$MODULE_DIR$/predictions" />
+      <excludeFolder url="file://$MODULE_DIR$/ronda_1-anotadores" />
+      <excludeFolder url="file://$MODULE_DIR$/ronda_2-nosotros" />
+      <excludeFolder url="file://$MODULE_DIR$/data" />
+    </content>
     <orderEntry type="jdk" jdkName="Python 3.10 (section_annotation)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>

@@ -6,7 +6,7 @@ Similarity utility functions based upon boundary edit distance.
 from __future__ import absolute_import, division
 from segeval.similarity.distance import identify_types
 from segeval.similarity.distance.multipleboundary import boundary_edit_distance
-from segeval.similarity.weight import weight_a, weight_s_scale, weight_t_scale
+from segeval.similarity.weight import weight_a, weight_s_scale, weight_t_scale, B2_parameters
 from segeval.metric import METRIC_DEFAULTS
 from segeval.ml import ConfusionMatrix as cm
 from segeval.format import (BoundaryFormat, boundary_string_from_masses,
