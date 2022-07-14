@@ -1,7 +1,8 @@
 import json
 import re
 from collections import deque
-from typing import TypedDict, cast, Callable, TextIO
+from pathlib import Path
+from typing import TypedDict, cast, Callable, TextIO, Literal
 
 # ------------------------------------------------------------------------------------------------------------------
 
@@ -16,8 +17,10 @@ end_delimiter_splitter = re.compile(r"([)\]}?!][.,:;]?)(?=[^.,:;])")
 dot_splitter = re.compile(r"(?<!\.)(\.)(?=[A-ZÀ-ÖØ-ß])(?![A-ZÀ-ÖØ-ß]\.)|(?<=[a-zß-öø-ÿ])(\.)(?=[A-ZÀ-ÖØ-ß])")
 punctuation_splitter = re.compile(r"([,:;]).")
 
-
 # ------------------------------------------------------------------------------------------------------------------
+
+Split = Literal['train', 'dev', 'test']
+
 
 class Annotation(TypedDict):
     id: str
@@ -36,6 +39,8 @@ class NoteWithAnnotations(TypedDict):
     note_id: int
     filename: str
     note_text: str
+    best_annotator: str
+    split: Split
     annotator_annotations: dict[str, NoteAnnotations]
 
 
@@ -72,8 +77,8 @@ label_list = [
     "EXPLORACION",
     "TRATAMIENTO",
     "EVOLUCION",
-    "DIAGNOSTICO_DIFERENCIAL",
-    "DIAGNOSTICO_FINAL"
+    # "DIAGNOSTICO_DIFERENCIAL",
+    # "DIAGNOSTICO_FINAL"
 ]
 
 
@@ -209,8 +214,19 @@ def main(json_path: str, conll_output_path: str, boundary_dataset_path: str):
         boundary_types=label_list,
         items=dict()
     )
+    conll_output_path = Path(conll_output_path)
 
-    with open(conll_output_path, "w", encoding="utf8") as conll_file:
+    with \
+            open(conll_output_path.with_suffix('.train.conll'), "w", encoding="utf8") as train_conll_file, \
+            open(conll_output_path.with_suffix('.dev.conll'), "w", encoding="utf8") as dev_conll_file, \
+            open(conll_output_path.with_suffix('.test.conll'), "w", encoding="utf8") as test_conll_file:
+
+        file_handler_mapper = {
+            "train": train_conll_file,
+            "dev": dev_conll_file,
+            "test": test_conll_file,
+        }
+
         for filename, annotated_file_data in dataset.items():
             note_text: str = annotated_file_data['note_text']
             tokenized_note_text: list[Token] = generate_token_list(note_text)
@@ -223,8 +239,13 @@ def main(json_path: str, conll_output_path: str, boundary_dataset_path: str):
             if 1 < len(boundaries_per_annotator):
                 boundary_dataset['items'][filename] = boundaries_per_annotator
 
-            for annotator, boundaries in boundaries_per_annotator.items():
-                generate_conll(filename, annotator, tokenized_note_text, boundaries, conll_file)
+            generate_conll(
+                filename,
+                annotated_file_data['best_annotator'],
+                tokenized_note_text,
+                boundaries_per_annotator[annotated_file_data['best_annotator']],
+                file_handler_mapper[annotated_file_data['split']]
+            )
 
     with open(boundary_dataset_path, "w", encoding="utf8") as boundary_dataset_file:
         json.dump(boundary_dataset, boundary_dataset_file, ensure_ascii=False, indent=2)
@@ -232,7 +253,7 @@ def main(json_path: str, conll_output_path: str, boundary_dataset_path: str):
 
 if __name__ == '__main__':
     main(
-        json_path='./data/annotations_codiesp.json',
-        conll_output_path='./data/annotations_codiesp.conll',
+        json_path='./data/annotations_codiesp_splitted.json',
+        conll_output_path='./data/conll/annotations_codiesp.conll',
         boundary_dataset_path='./data/annotations_codiesp_boundaries_dataset.json'
     )

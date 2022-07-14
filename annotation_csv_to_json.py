@@ -135,13 +135,7 @@ def fix_corrupted_annotation(corrupted_data_entry: CorruptedDataEntry, corrupted
 
     if next_annotation is None:
         logger.error(f"File {corrupted_data_entry['note_id']} has no annotations")
-        return FixedDataEntry(
-            note_id=corrupted_data_entry['note_id'],
-            filename=filename,
-            annotations=fuse_contiguous_sections(corrupted_data_entry['task_result'], original_note),
-            annotator=corrupted_data_entry['task_executor'],
-            note_text=original_note,
-        )
+        return None
 
     original_note_chars = deque(original_note)
 
@@ -193,7 +187,7 @@ def fix_corrupted_dataset(dataset: list[CorruptedDataEntry]) -> list[FixedDataEn
     with open('./mappers/corrupted_notes_mapping.json', encoding='utf8') as mapper_file:
         corrupted_corpus_mapper: dict = json.load(mapper_file)
 
-    return [fix_corrupted_annotation(corrupted_data_entry, corrupted_corpus_mapper) for corrupted_data_entry in dataset]
+    return [entry for entry in [fix_corrupted_annotation(corrupted_data_entry, corrupted_corpus_mapper) for corrupted_data_entry in dataset] if entry is not None]
 
 
 # ------------------------------------------------------------------------------------------------------------------
