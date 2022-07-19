@@ -153,18 +153,21 @@ def generate_token_list(text: str) -> list[Token]:
     tokens = list()
 
     current_offset = 0
+    previous_not_eol = True
 
     for str_token in str_tokens:
         end_offset = current_offset + len(str_token)
 
-        if str_token and str_token not in ['\r\n', '\n', '\r', ' ']:
+        if str_token and str_token not in ['\r\n', '\n', '\r', ' ', '​', ' ', '­']:
             tokens += subtokenize(str_token, current_offset)
-        elif str_token in ['\r\n', '\n', '\r']:
+            previous_not_eol = True
+        elif previous_not_eol and str_token in ['\r\n', '\n', '\r']:
             tokens.append(Token(
                 token='<#EOL#>',
                 start_offset=current_offset,
                 end_offset=end_offset
             ))
+            previous_not_eol = False
 
         current_offset = end_offset
 

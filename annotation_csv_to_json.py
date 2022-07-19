@@ -124,7 +124,7 @@ def fuse_contiguous_sections(annotations: list[Annotation], note: str) -> list[A
     return annotations
 
 
-def fix_corrupted_annotation(corrupted_data_entry: CorruptedDataEntry, corrupted_corpus_mapper: dict) -> FixedDataEntry:
+def fix_corrupted_annotation(corrupted_data_entry: CorruptedDataEntry, corrupted_corpus_mapper: dict) -> FixedDataEntry | None:
     annotated_note_data: CorruptedNoteData = corrupted_corpus_mapper[corrupted_data_entry['note_text']]
     original_note, filename = annotated_note_data['original_note'], annotated_note_data['filename']
 
