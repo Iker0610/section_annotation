@@ -4,9 +4,9 @@ import statistics
 from typing import TypedDict, Optional
 
 from segeval.format import BoundaryFormat
-from segeval.similarity import boundary_statistics, B2_parameters as b2_default_parameters, weight_a
+from segeval.similarity import boundary_statistics, B2_parameters as b2_default_parameters
 from segeval.similarity.boundary import boundary_similarity
-from segeval.similarity.weight import weight_s, weight_t
+from segeval.similarity.weight import weight_s, weight_t, weight_a
 
 
 class Annotation(TypedDict):
